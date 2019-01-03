@@ -609,6 +609,8 @@ class ManticoreEVM(ManticoreBase):
                 else:
                     contract_account = self.create_contract(owner=owner, init=md._init_bytecode)
 
+                self._output.save_evm(md.name, bytecode=md._init_bytecode)
+
                 if contract_account is None:
                     raise EthereumError("Failed to build contract %s" % contract_name_i)
                 self.metadata[int(contract_account)] = md

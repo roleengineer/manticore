@@ -548,3 +548,11 @@ class ManticoreOutput:
             for symbol in state.input_symbols:
                 buf = solver.get_value(state.constraints, symbol)
                 f.write(f'{symbol.name}: {buf!r}\n')
+
+    def save_evm(self, name: str, bytecode: bytes):
+        """
+        Saves an {name}.evm file that can be launched with Ethersplay.
+        """
+        with self.save_stream(f'{name}.evm', binary=True) as f:
+            # Ethersplay require 'EVM' prefix to recognize the file
+            f.write(b'EVM' + bytecode)
