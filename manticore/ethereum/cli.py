@@ -4,6 +4,19 @@ from .detectors import DetectInvalid, DetectIntegerOverflow, DetectUninitialized
     DetectExternalCallAndLeak, DetectEnvInstruction, DetectRaceCondition, DetectorClassification
 from .manticore import ManticoreEVM
 from .plugins import FilterFunctions, LoopDepthLimiter, VerboseTrace
+from ..utils import config
+
+consts = config.get_group('evm')
+consts.add('txnocoverage', default=False, description='Do not use coverage as stopping criteria')
+consts.add('txlimit', default=-1, description='Maximum number of symbolic transactions to run (positive integer)')
+consts.add('txpreconstrain', default=False, description='Constrain human transactions to avoid exceptions in the contract function dispatcher')
+consts.add('txnoether', default=False, description='Do not attempt to send ether to contract')
+consts.add('txaccount', default="attacker",
+                        description='Account used as caller in the symbolic transactions, either "attacker" or '
+                                '"owner" or "combo1" (uses both)')
+
+
+consts.add('contract', default='', description='Contract name to analyze in case of multiple contracts')
 
 
 def get_detectors_classes():
@@ -63,9 +76,9 @@ def ethereum_main(args, logger):
     logger.info('Beginning analysis')
 
     with m.shutdown_timeout(args.timeout):
-        m.multi_tx_analysis(args.argv[0], contract_name=args.contract, tx_limit=args.txlimit,
-                            tx_use_coverage=not args.txnocoverage, tx_send_ether=not args.txnoether,
-                            tx_account=args.txaccount, tx_preconstrain=args.txpreconstrain)
+        m.multi_tx_analysis(args.argv[0], contract_name=args.contract, tx_limit=consts.txlimit,
+                            tx_use_coverage=not consts.txnocoverage, tx_send_ether=not consts.txnoether,
+                            tx_account=args.txaccount, tx_preconstrain=consts.txpreconstrain)
 
     if not args.no_testcases:
         m.finalize()

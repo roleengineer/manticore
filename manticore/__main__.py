@@ -26,6 +26,11 @@ def main():
     """
     Dispatches execution into one of Manticore's engines: evm or native.
     """
+    if sys.argv[-1].endswith('.sol'):
+        from manticore.ethereum.cli import ethereum_main as inner_main
+    else:
+        from manticore.native.cli import native_main as inner_main
+
     args = parse_arguments()
 
     if args.no_colors:
@@ -35,12 +40,7 @@ def main():
 
     ManticoreBase.verbosity(args.v)
 
-    if args.argv[0].endswith('.sol'):
-        from manticore.ethereum.cli import ethereum_main
-        ethereum_main(args, logger)
-    else:
-        from manticore.native.cli import native_main
-        native_main(args, logger)
+    inner_main(args, logger)
 
 
 def parse_arguments():
@@ -73,8 +73,6 @@ def parse_arguments():
                         help='Number of parallel processes to spawn')
     parser.add_argument('argv', type=str, nargs='*', default=[],
                         help="Path to program, and arguments ('+' in arguments indicates symbolic byte).")
-    parser.add_argument('--timeout', type=int, default=consts.timeout,
-                        help='Timeout. Abort exploration after TIMEOUT seconds')
     parser.add_argument('-v', action='count', default=1,
                         help='Specify verbosity level from -v to -vvvv')
     parser.add_argument('--workspace', type=str, default=None,
@@ -86,8 +84,6 @@ def parse_arguments():
                         help='Show program version information')
     parser.add_argument('--config', type=str,
                         help='Manticore config file (.yml) to use. (default config file pattern is: ./[.]m[anti]core.yml)')
-    parser.add_argument('--stdin_size', type=int, default=consts.stdin_size,
-                        help='Control the maximum symbolic stdin size')
 
     bin_flags = parser.add_argument_group('Binary flags')
     bin_flags.add_argument('--entrysymbol', type=str, default=None,
@@ -108,24 +104,9 @@ def parse_arguments():
     eth_flags = parser.add_argument_group('Ethereum flags')
     eth_flags.add_argument('--verbose-trace', action='store_true',
                            help='Dump an extra verbose trace for each state')
-    eth_flags.add_argument('--txlimit', type=positive,
-                           help='Maximum number of symbolic transactions to run (positive integer)')
 
-    eth_flags.add_argument('--txnocoverage', action='store_true',
-                           help='Do not use coverage as stopping criteria')
 
-    eth_flags.add_argument('--txnoether', action='store_true',
-                           help='Do not attempt to send ether to contract')
 
-    eth_flags.add_argument('--txaccount', type=str, default="attacker",
-                           help='Account used as caller in the symbolic transactions, either "attacker" or '
-                                '"owner" or "combo1" (uses both)')
-
-    eth_flags.add_argument('--txpreconstrain', action='store_true',
-                           help='Constrain human transactions to avoid exceptions in the contract function dispatcher')
-
-    eth_flags.add_argument('--contract', type=str,
-                           help='Contract name to analyze in case of multiple contracts')
 
     eth_detectors = parser.add_argument_group('Ethereum detectors')
 
